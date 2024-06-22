@@ -1,0 +1,770 @@
+﻿//全局变量
+var callParams = [];
+var callBackFunction;
+var indexLoginLayer;
+(function () {
+    $(document).ready(function () {
+        layui.use(['element', 'layer', 'form'], function () {
+            var form = layui.form
+                , laypage = layui.laypage
+                , $ = layui.jquery
+                , layer = layui.layer;
+            var index;
+            callBackFunction = LoginHeraderChange;//登录后的回调函数
+
+            $(document).off("click", "#login-btn").on("click", "#login-btn", function () {
+                loginAction();
+            });
+
+            $(document).off("click", ".user-nav #Logout").on("click", ".user-nav #Logout", function () {
+                $.get("/RegistLogin/LoginOut?t=" + Math.random(), function (data) {
+                    if (data.statuesCode == "ok") {
+
+                        ////2024 读书月清理localstorage
+                        //$removeTokenAndExit();
+
+                        $.get("/Qikan/RegistLogin/LoginView?t=" + randomString(), function (data) {
+                            //21-5-14
+                            // $('#user-nav').find(".user-more").remove();
+                            $('#user-nav').empty();
+                            $('#user-nav').append(data);
+                        });
+                    }
+                });
+            });
+
+            form.on('submit(Login)', function (data) {
+                data.field['LoginType'] = "normallogin";
+                var retxtpwd = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,16}$/;
+                if (!retxtpwd.test(data.field['LoginUserPassword'])) {
+                    data.field['IsWeakPassword'] = "1";
+                }
+                var encrypt = new JSEncrypt();
+                encrypt.setPublicKey("-----BEGIN PUBLIC KEY-----MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDesz3GocmDJaF4HZD4xgAMstc0cKz6gSZgEeqQASfoEbx2YY/I0ZTiKhI1BfrStAqAknrqj30jRUenf0HePaS1NrKfrYHBazRwbQnpru2wOuS+N34wlqL16TcQAU6dt/CnIRPb3LSA6kfqVHL/dStH5R0NsuAAnt9sMqJMTs8eVQIDAQAB-----END PUBLIC KEY-----");
+                data.field['LoginUserName'] = encrypt.encrypt(data.field['LoginUserName']);
+
+                //data.field['LoginUserName']= AesEncrypt(data.field['LoginUserName']);
+                data.field['va'] = encrypt.encrypt(data.field['LoginUserPassword']);
+                data.field['LoginUserPassword'] = encrypt.encrypt($.md5(data.field['LoginUserPassword']));
+                //data.field['LoginUserPassword'] = $.md5(data.field['LoginUserPassword']);
+                $.ajax({
+                    url:"/RegistLogin/Login",
+                    data: data.field,
+                    type: 'post',
+                    dataType: 'json',
+                    beforeSend: function () {
+                        loadding();
+                    },
+                    complete: function () {
+                        loaddingClose();
+                    },
+                    success: function (succ) {
+                        $("input[name='LoginUserPassword']").val("");
+                        //console.log(succ.Status);
+                        if (succ.Status) {
+                            //成功后改变 页面 右上角
+                            $.get("/Qikan/RegistLogin/LoginView", { t: randomString() }, function (data) {
+                                //21-5-14
+                                //$('#user-nav').find(".user-more").remove();
+                                //$('#user-nav').find(".login-btn").remove();
+                                $('#user-nav').empty();
+                                $('#user-nav').append(data);
+                                if (callBackFunction) {
+                                    if (callBackFunction == LoginHeraderChange) {// 正常登录
+                                        LoginHeraderChange();
+                                    } else {// 其他操作检测是否登录 后回调
+                                        LoginHeraderChange();
+                                        eval("callBackFunction(" + callParams + ")");
+                                        callBackFunction = LoginHeraderChange;
+                                        //  eval("callbackFuntion(" + p + ")");
+                                    }
+                                    checkUserKind();
+                                }
+                                //  LoginHeraderChange();
+                            });//用 后台生成HTML 实现 改变 Header;
+
+                            if (succ.IsBindThis) {
+                                layer.confirm('是否绑定当前机构权限?', { icon: 3, title: '提示' }, function (index) {
+                                    $.get("/Qikan/UserInfo/GetLimitFromOrgan", { t: Math.random() }, function (data) {
+                                        layer.alert(data.PromptMsg);
+                                    });//绑定机构
+                                    layer.close(index);
+                                });
+                            }
+                            //layer.closeAll('page');
+                            if (indexLoginLayer) {
+                                // debugger;
+                                layer.close(indexLoginLayer);
+                            }
+                            else {
+                                layer.closeAll('page');
+                            }
+
+                        } else {
+                            if (succ.StauesCode === "resetpassword") {
+                                layer.alert('亲爱的用户，您好！根据《网络安全法》和《通信网络安全防护管理办法》的有关规定，您的登录密码类属于网络安全威胁弱密码范畴，请修改您的密码后重新登录！', function (index) {
+                                    //do something
+                                    layer.close(index);
+                                    window.location.href = succ.href;
+                                });
+                            } else {
+                                layer.alert(succ.errMsg, { title: "提示" })
+                            }
+                        }
+                    }, error: function (err) {
+                        layer.alert("用户名或密码错误", { title: "提示" })
+                    }
+                });
+                return false;
+            })
+
+            form.on('submit(getLoginCode)', function (data) {
+                if ($("#txtLoginPhoneImgCode").val() == "") {
+                    layer.msg("请输入图文验证码")
+                    return false;
+                }
+
+                if (flag === false)
+                    return;
+                $('#getLoginCode').addClass('layui-btn-disabled');
+                $('#getLoginCode').removeAttr("disabled");
+                $.ajax({
+                    url:"/RegistLogin/SendRegPhoneCode",
+                    type: "post",
+                    async: true,
+                    dataType: "json",
+                    data: { "phone": $("#PhoneUserName").val(), "imgCode": $("#txtLoginPhoneImgCode").val(), "codeSessionKey": "login" },
+                    beforeSend: function () {
+                        loadding();
+                    },
+                    complete: function () {
+                        loaddingClose();
+                    },
+                    success: function (info) {
+                        if (info.code == true) {
+                            clearInterval(t1);//
+                            flag = false;
+                            SetDownCount(info.countdown);
+                            layer.msg(info.result);
+                        }
+                        else {
+                            $(".code-image").attr("src", $(".code-image").attr('src') + "?" + Math.random());
+                            layer.msg(info.result);
+                            $('#getLoginCode').removeClass('layui-btn-disabled');
+                            $('#getLoginCode').removeAttr("disabled");
+                        }
+
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        /*错误信息处理*/
+                    }
+                });
+                return false;
+            });
+
+            form.on('submit(phoneLogin)', function (data) {
+                data.field['LoginType'] = "normallogin";
+                data.field['LoginUserPassword'] = $.md5("@#dghe7");
+                $.ajax({
+                    url:"/RegistLogin/PhoneLogin",
+                    data: data.field,
+                    type: 'post',
+                    dataType: 'json',
+                    beforeSend: function () {
+                        loadding();
+                    },
+                    complete: function () {
+                        loaddingClose();
+                    },
+                    success: function (succ) {
+                        //console.log(succ.Status);
+                        if (succ.Status) {
+                            //成功后改变 页面 右上角
+                            $.get("/Qikan/RegistLogin/LoginView", { t: randomString() }, function (data) {
+                                //21-5-14
+                                //$('#user-nav').find(".login-btn").remove();
+                                $('#user-nav').empty();
+                                $('#user-nav').append(data);
+                                if (callBackFunction) {
+                                    if (callBackFunction == LoginHeraderChange) {// 正常登录
+                                        LoginHeraderChange();
+                                    } else {// 其他操作检测是否登录 后回调
+                                        LoginHeraderChange();
+                                        eval("callBackFunction(" + callParams + ")");
+                                        callBackFunction = LoginHeraderChange;
+                                        //  eval("callbackFuntion(" + p + ")");
+                                    }
+                                    checkUserKind();
+                                }
+                                //  LoginHeraderChange();
+                            });//用 后台生成HTML 实现 改变 Header;
+
+                            if (succ.FirstLoginIn) {
+                                window.location.href = "/Qikan/GetBackPassword/FirstPassreset"
+                            } else {
+                                if (succ.IsBindThis) {
+                                    layer.confirm('是否绑定当前机构权限?', { icon: 3, title: '提示' }, function (index) {
+                                        $.get("/Qikan/UserInfo/GetLimitFromOrgan", { t: Math.random() }, function (data) {
+                                            layer.alert(data.PromptMsg);
+                                        });//绑定机构
+                                        layer.close(index);
+                                    });
+                                }
+
+                                //layer.closeAll('page');
+                                if (indexLoginLayer) {
+                                    layer.close(indexLoginLayer);
+                                }
+                                else {
+                                    layer.closeAll('page');
+                                }
+                            }
+                        } else {
+                            layer.alert(succ.errMsg, { title: "提示" })
+                        }
+                    }, error: function (err) {
+                        layer.alert("手机登录错误", { title: "提示" })
+                    }
+                });
+                return false;
+            })
+
+            $('#IPLogin').on('click', function () {
+                var json = {};
+                json['LoginType'] = 'iplogin';
+                $.ajax({
+                    url:"/RegistLogin/Login",
+                    data: json,
+                    type: 'post',
+                    async: true,
+                    dataType: 'json',
+                    beforeSend: function () {
+                        loadding();
+                    },
+                    complete: function () {
+                        loaddingClose();
+                    },
+                    success: function (succ) {
+                        if (succ.Status) {
+                            //成功后改变 页面 右上角
+                            $.get("/Qikan/RegistLogin/LoginView", { t: randomString() }, function (data) {
+                                //  console.log(data);
+                                $('#user-nav').find("li").remove();
+                                $('#user-nav').append(data);
+                                if (callBackFunction) {
+                                    if (callBackFunction == LoginHeraderChange) {
+                                        LoginHeraderChange();
+                                    } else {
+                                        LoginHeraderChange();
+                                        eval("callBackFunction(" + callParams + ")");
+                                        callBackFunction = LoginHeraderChange;//下载后把登录后的操作重置
+                                        // eval("callbackFuntion(" + p + ")");
+                                    }
+                                    checkUserKind();
+                                }
+                                // 登录操作后 改变 dom 结构时绑定 退出操作
+                                // console.log($('#Logout'));
+                                // LoginHeraderChange();
+                            })//用 后台生成HTML 实现 改变 Header
+                            // LoginCallBack(index, succ.Msg);// 用 js 操作 页面元素 实现改变Header
+                            //layer.close(index);
+                            //layer.closeAll('page');
+                            if (indexLoginLayer) {
+                                layer.close(indexLoginLayer);
+                            }
+                            else {
+                                layer.closeAll('page');
+                            }
+                        }
+                        else {
+                            layer.alert(succ.Msg,
+                                {
+                                    title: "提示"
+                                })
+                        }
+                    }, error: function (err) {
+                        layer.alert("登录失败", { title: "提示" })
+                    }
+                });
+
+            })
+
+            $("#txtLoginUserName,#txtLoginUserPassword").bind("keypress", function (e) {
+                var theEvent = e || window.event;
+                var code = theEvent.keyCode || theEvent.which || theEvent.charCode;
+                if (code == 13) {    //回车键的键值为13
+                    $("#normalLogin").click(); //调用登录按钮的登录事件
+                }
+            })
+
+            //checkUserKind();
+            var qrimgstr = "";//二维码字符
+            var iCount;
+            function loadQr() {
+                if (iCount != null) {
+                    return;
+                }
+                $.ajax({
+                    url:"/RegistLogin/WebQrStringCreate?" + Math.random(),
+                    dataType: "json",
+                    async: true,
+                    beforeSend: function () {
+                        //loadding();
+                    },
+                    complete: function () {
+                        //loaddingClose();
+                    },
+                    success: function (json) {
+                        if (json.code == 200) {
+                            $("#qrImglogin").attr("src", "/RegistLogin/QRCodeCreateHander?qrstr=" + json.qrstr);
+                            qrimgstr = json.qrstr;
+                            //console.log(qrimgstr);
+                            //console.log(new Date());
+                            iCount = setInterval(show, 3000);
+                            //show();
+                        }
+                        else {
+                            layer.msg(json.text);
+                        }
+                    },
+                    error: function (json) {
+
+                    }
+                });
+            }//生成
+            function show() {
+                if ($("#login").is(":hidden")) {
+                    return;
+                }
+                if ($('#login ul li').eq(0).hasClass("layui-this")) {
+                    return;
+                }
+                var timestamp = new Date().getTime();
+                $.ajax({
+                    url:"/RegistLogin/WebQrAutoLogin?qrstrOriginal=" + qrimgstr + '&time=' + timestamp,
+                    dataType: "json",
+                    async: true,
+                    beforeSend: function () {
+                    },
+                    success: function (json) {
+                        //console.log(json.code);
+                        if (json.code == 200) {
+                            clearInterval(iCount);
+                            iCount = null;
+                            window.location.reload(); //刷新页面 后台登录  
+                            // QrCodeChangeHeader();
+                        }
+                        else if (json.isexpire) {
+                            //clearInterval(iCount);
+                            //iCount = null;
+                            //console.log(new Date());
+                            //console.log("超时")
+                            //layer.msg("二维码超时");
+                            //二维码超时
+                            // loadQr();
+                        }
+                    },
+                    error: function (json) {
+                    }
+                });
+            }//加载
+            function QrCodeChangeHeader() {
+                $.get("/Qikan/RegistLogin/LoginView", { t: randomString() }, function (data) {
+                    //21-5-14
+                    $('#user-nav').empty();
+                    //$('#user-nav').find(".login-btn").remove();
+                    $('#user-nav').append(data);
+                    if (callBackFunction) {
+                        if (callBackFunction == LoginHeraderChange) {// 正常登录
+                            LoginHeraderChange();
+                        } else {// 其他操作检测是否登录 后回调
+                            LoginHeraderChange();
+                            eval("callBackFunction(" + callParams + ")");
+                            callBackFunction = LoginHeraderChange;
+                        }
+                    }
+                });
+            }
+            $('#login ul li').bind('click', function () {
+                if ($(this).text() == '用户登录') {
+                    if ($('.login-switch a').hasClass('text'))
+                        $('.login-switch a').removeClass('text').addClass('code');
+                    if (iCount != null) {
+                        clearInterval(iCount);
+                        iCount = null;
+                    }
+                }
+                else if ($(this).text() == '手机快捷登录') {
+                    if (iCount != null) {
+                        clearInterval(iCount);
+                        iCount = null;
+                    }
+                }
+                else {//二维码
+                    if ($('.login-switch a').hasClass('code'))
+                        $('.login-switch a').removeClass('code').addClass('text');
+                    loadQr();
+                }
+            })//切换登录方式
+            $('.login-switch a').bind('click', function () {
+                if ($(this).attr("class") == "code") {
+                    $('#login ul li').eq(1).addClass('layui-this');
+                    $('#login ul li').eq(0).removeClass('layui-this');
+                    $('#login .layui-tab-item').eq(1).addClass('layui-show');
+                    $('#login .layui-tab-item').eq(0).removeClass('layui-show');
+                    $(this).removeClass("code").addClass("text");
+                    loadQr();
+                }
+                else {
+                    $('#login ul li').eq(1).removeClass('layui-this');
+                    $('#login ul li').eq(0).addClass('layui-this');
+                    $(this).removeClass("text").addClass("code");
+                    $('#login .layui-tab-item').eq(0).addClass('layui-show');
+                    $('#login .layui-tab-item').eq(1).removeClass('layui-show');
+                    if (iCount != null) {
+                        clearInterval(iCount);
+                        iCount = null;
+                    }
+                }
+            })//切换登录方式
+            function CheckUserLogin(callbackFuntion, params) {
+                var logined = false;
+                $.ajax({
+                    url:"/RegistLogin/CheckUserIslogin",
+                    data: {},
+                    dataType: 'json',
+                    type: "post",
+                    async: false,
+                    success: function (json) { logined = json.isLogined; },
+                    error: function () { logined = false; }
+                });
+                if (logined) {//登录了
+                    if (callbackFuntion) {
+                        var p = "";
+                        if (params) {
+                            for (var i = 0; i < params.length; i++) {
+                                var temp = params[i];
+                                if (isNaN(params[i]))//非法数字也加''
+                                {
+                                    temp = "'" + params[i] + "'";
+                                }
+                                if (p == "") {
+                                    if (/^[\d.]+$/.test(temp))//纯数字
+                                        p = "'" + temp.toString() + "'";
+                                    else
+                                        p = temp;
+                                } else {
+                                    if (/^[\d.]+$/.test(temp))//纯数字
+                                        p += "," + "'" + temp.toString() + "'";
+                                    else
+                                        p += "," + temp;
+                                    // p += "," + temp.toString();
+                                }
+                            }
+                        }
+                        eval("callbackFuntion(" + p + ")");
+                    }
+                }
+                else {//没有登录 准备 会回调函数 和调用登录框
+
+                    callBackFunction = (callbackFuntion || LoginHeraderChange);
+                    var p = "";
+                    if (params) {
+                        for (var i = 0; i < params.length; i++) {
+                            var temp = params[i];
+                            if (isNaN(params[i])) {
+                                temp = "'" + params[i] + "'";
+                            }
+                            if (p == "") {
+                                p = temp;
+                            } else {
+                                p += "," + temp;
+                            }
+                        }
+                    }
+                    callParams = p;
+                    loginAction();//调用登录框
+                }
+            }// 
+            window.checklogin = CheckUserLogin;//全局检测登录回调
+
+            function CheckFlowUserLogin(callbackFuntion, params) {
+                var logined = isLoginFlowUser();
+                if (logined) {//登录了
+                    if (callbackFuntion) {
+                        var p = "";
+                        if (params) {
+                            for (var i = 0; i < params.length; i++) {
+                                var temp = params[i];
+                                if (isNaN(params[i]))//非法数字也加''
+                                {
+                                    temp = "'" + params[i] + "'";
+                                }
+                                if (p == "") {
+                                    if (/^[\d.]+$/.test(temp))//纯数字
+                                        p = "'" + temp.toString() + "'";
+                                    else
+                                        p = temp;
+                                } else {
+                                    if (/^[\d.]+$/.test(temp))//纯数字
+                                        p += "," + "'" + temp.toString() + "'";
+                                    else
+                                        p += "," + temp;
+                                    // p += "," + temp.toString();
+                                }
+                            }
+                        }
+                        eval("callbackFuntion(" + p + ")");
+                    }
+                }
+                else {//没有登录 准备 会回调函数 和调用登录框
+
+                    callBackFunction = (callbackFuntion || LoginHeraderChange);
+                    var p = "";
+                    if (params) {
+                        for (var i = 0; i < params.length; i++) {
+                            var temp = params[i];
+                            if (isNaN(params[i])) {
+                                temp = "'" + params[i] + "'";
+                            }
+                            if (p == "") {
+                                p = temp;
+                            } else {
+                                p += "," + temp;
+                            }
+                        }
+                    }
+                    callParams = p;
+                    loginAction();//调用登录框
+                }
+            }// 
+            window.checkFlowUserLogin = CheckFlowUserLogin;//全局检测流量用户登录回调
+
+            function CheckUserNormalLogin(callbackFuntion, params) {
+                var logined = false;
+                $.ajax({
+                    url:"/RegistLogin/CheckUserIsNormallogin",
+                    data: {},
+                    dataType: 'json',
+                    type: "post",
+                    async: false,
+                    success: function (json) { logined = json.isLogined; },
+                    error: function () { logined = false; }
+                });
+                if (logined) {//登录了
+                    if (callbackFuntion) {
+                        var p = "";
+                        if (params) {
+                            for (var i = 0; i < params.length; i++) {
+                                var temp = params[i];
+                                if (isNaN(params[i]))//非法数字也加''
+                                {
+                                    temp = "'" + params[i] + "'";
+                                }
+                                if (p == "") {
+                                    if (/^[\d.]+$/.test(temp))//纯数字
+                                        p = "'" + temp.toString() + "'";
+                                    else
+                                        p = temp;
+                                } else {
+                                    if (/^[\d.]+$/.test(temp))//纯数字
+                                        p += "," + "'" + temp.toString() + "'";
+                                    else
+                                        p += "," + temp;
+                                    // p += "," + temp.toString();
+                                }
+                            }
+                        }
+                        eval("callbackFuntion(" + p + ")");
+                    }
+                }
+                else {//没有登录 准备 会回调函数 和调用登录框
+
+                    callBackFunction = (callbackFuntion || LoginHeraderChange);
+                    var p = "";
+                    if (params) {
+                        for (var i = 0; i < params.length; i++) {
+                            var temp = params[i];
+                            if (isNaN(params[i])) {
+                                temp = "'" + params[i] + "'";
+                            }
+                            if (p == "") {
+                                p = temp;
+                            } else {
+                                p += "," + temp;
+                            }
+                        }
+                    }
+                    callParams = p;
+                    loginAction();//调用登录框
+                }
+            }// 
+            window.checkNormallogin = CheckUserNormalLogin;//全局检测登录回调
+
+            $('#wechatlogin').off('click');
+            $('#wechatlogin').bind('click', function () {
+                var urls = encodeURIComponent(window.location.href.replace(/^http:\/\/[^/]+/, ""));
+                window.location.href = '/RegistLogin/Wechat?urls=' + urls;
+            });
+            $('.qqlogin').off('click');
+            $('.qqlogin').bind('click', function () {
+                var urls = encodeURIComponent(window.location.href.replace(/^http:\/\/[^/]+/, ""));
+                window.location.href = '/RegistLogin/QQLogin?urls=' + urls;
+            });
+
+            $(document).off("click", ".carsilogin").on("click", ".carsilogin", function () {
+                $.ajax({
+                    url:"/Qikan/Carsi/IsIPLoginSuccess",
+                    type: "post",
+                    async: true,
+                    dataType: "json",
+                    data: {},
+                    beforeSend: function () {
+                        loadding();
+                    },
+                    complete: function () {
+                        loaddingClose();
+                    },
+                    success: function (data) {
+                        if (data.result == 1) {
+                            layer.alert("你已使用IP登录，无需使用CARSI认证登录！");
+                        }
+                        else {
+                            window.location.href = "/Qikan/Carsi/Authorize";
+                        }
+
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        /*错误信息处理*/
+                        loaddingClose();
+                    }
+                });
+            });
+
+            $(document).off("click", ".cstlogin").on("click", ".cstlogin", function () {
+                window.location.href = "https://passport.escience.cn/oauth2/authorize?response_type=code&redirect_uri=http://qikan.cqvip.com/ext/callback&client_id=23856&theme=full&state=http://qikan.cqvip.com";
+            });
+
+            checkUserKind();
+
+            //机构二维码
+            $(document).off("mouseover mouseout", ".user-nav #bindUserForApp").on("mouseover mouseout", ".user-nav #bindUserForApp", function (event) {
+                if (event.type == "mouseover") {
+                    $.ajax({
+                        url:"/Qikan/RegistLogin/MobilePhoneQrCreate?" + Math.random(),
+                        dataType: 'json',
+                        type: 'POST',
+                        async: false,
+                        beforeSend: function (xhr) {
+                            // xhr.setRequestHeader("User-Agent", "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.75 Safari/537.36");
+                        },
+                        success: function (json) {
+                            if (json.code == 200) {
+                                var timestamp = new Date().getTime();
+                                $("#qrImgTop").attr('src', '/Qikan/RegistLogin/QRCodeCreateHanderHeader?qrstr=' + json.qrstr + '&time=' + timestamp);
+                                //   $("#bindUserQr").show();
+                            }
+                            else {
+                            }
+                        },
+                        error: function (json) {
+
+                        }
+                    });
+                } else if (event.type == "mouseout") {
+                    $("#bindUserQr").hide();
+                }
+
+            });
+        });
+    })
+})()
+
+//全局函数
+function LoginHeraderChange() {
+    checkUserKind();
+
+    ////2024 读书月
+    //var data = getRmUserInfo2();
+    //if (data.userType == 1 && data.userId != "0") {
+    //    $pushInfo(data.userId, data.phoneNumber, pushCallback);
+    //}
+
+}
+
+//2024 读书月
+window.pushCallback = function () {
+
+}
+
+window.getRmUserInfo2 = function () {
+    var data = {};
+    $.ajax({
+        url: "/RegistLogin/GetRmUserInfo?" + Math.random(),
+        dataType: 'json',
+        async: false,
+        success: function (res) {
+            data = res
+        },
+        error: function () {
+        }
+    });
+    return data;
+}
+
+function loginAction() {
+    var heightVal = "620px";
+    var height = $("#hidheight").val();
+    if (height != null && height != undefined && height != "") {
+        heightVal = height;
+    }
+    indexLoginLayer = layer.open({
+        id: 1,
+        type: 1
+        //,title: false
+        , skin: 'layui-layer login'
+        , title: ' '
+        , area: ['480px', heightVal]
+        , anim: 0
+        , move: false
+        , resize: false
+        , shadeClose: true
+        , content: $('#login')
+        //,closeBtn: 0
+        //, zIndex: 100 //重点1
+        , success: function (layero) {
+            // layer.setTop(layero); //重点2
+            $("#txtLoginPhoneImgCode").val("");
+            $(".code-image").attr("src", "/Qikan/RegistLogin/AuthCode?key=login&" + Math.random());
+        }
+    });
+}
+
+function checkUserKind() {
+    $.post("/RegistLogin/CheckUserKind", "", function (json) {
+        if (json.code == 0) {
+            $('#bindUserForApp').attr('href', json.src).attr('target', "_blank");
+        }
+    });
+}
+
+var flag = true;
+var t1;
+function SetDownCount(second) {
+    $("#getLoginCode").addClass('disabled');
+    t1 = setInterval(function () {
+        second--;
+        if (second <= 0) {
+            flag = true;//
+            clearInterval(t1);
+            $("#getLoginCode").html('发送验证码');
+            $('#getLoginCode').removeClass('layui-btn-disabled');
+            $('#getLoginCode').removeAttr("disabled");
+            //$('#getLoginCode').click(function () {
+            //    sendmsg();
+            //});
+        } else {
+            $("#getLoginCode").html(second + 's后重试');
+        }
+    }, 1000);
+}

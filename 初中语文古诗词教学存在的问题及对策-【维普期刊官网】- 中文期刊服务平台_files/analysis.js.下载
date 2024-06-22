@@ -1,0 +1,175 @@
+(function(window) {
+	var _$ = window.$;
+	// var document = window.document;
+	var _remoteAddr = "https://log.cqvip.com/VipCloud/Service/Log";
+	var _scriptCollections = [ "/js/json2.min.js" ];
+	var _submitAddr = _remoteAddr + "/Record";
+	var behaviorName = "user_behavior_flag";
+	var oForm;
+	var tableInput;
+	var dataInput;
+	var siteDomainInput;
+	function _loadScript(url) {
+		var script = document.createElement("script")
+		script.type = "text/javascript";
+		script.src = url;
+		document.getElementsByTagName("head")[0].appendChild(script);
+	}
+	/**
+	 * @param name
+	 * @param value
+	 * @param options
+	 */
+	function _cookie(name, value, options) {
+		if (typeof value != 'undefined') { // name and value given, set cookie
+			options = options || {};
+			if (value === null) {
+				value = '';
+				options.expires = -1;
+			}
+			var expires = '';
+			if (options.expires
+					&& (typeof options.expires == 'number' || options.expires.toUTCString)) {
+				var date = new Date();
+				if (typeof options.expires == 'number') {
+					var tempDate = new Date();
+					date.setTime(tempDate.getTime()
+							+ (options.expires * 24 * 60 * 60 * 1000));
+				} else {
+					date = options.expires;
+				}
+				expires = '; expires=' + date.toUTCString();
+			}
+			var path = options.path ? '; path=' + (options.path) : '';
+			var domain = options.domain ? '; domain=' + (options.domain) : '';
+			var secure = options.secure ? '; secure' : '';
+			document.cookie = [ name, '=', encodeURIComponent(value), expires,
+					path, domain, secure ].join('');
+		} else {
+			var cookieValue = null;
+			if (document.cookie && document.cookie != '') {
+				var cookies = document.cookie.split(';');
+				for ( var i = 0; i < cookies.length; i++) {
+					var cookieOne = cookies[i].replace(/(^\s*)|(\s*$)/g, "");
+					if (cookieOne.substring(0, name.length + 1) == (name + '=')) {
+						cookieValue = decodeURIComponent(cookieOne
+								.substring(name.length + 1));
+						break;
+					}
+				}
+			}
+			return cookieValue;
+		}
+	}
+
+	function _guid() {
+		function __S4() {
+			return (((1 + Math.random()) * 0x10000) | 0).toString(16)
+					.substring(1);
+		}
+		return (__S4() + __S4() + __S4() + __S4());
+	}
+
+	function _createiFrameNode(frameName) {
+		var iframe;
+		try {
+			iframe = document.createElement('<iframe name=' + frameName + '>');
+		} catch (ex) {
+			iframe = document.createElement('iframe');
+		}
+		iframe.name = frameName;
+		iframe.id = frameName;
+		iframe.style.display = "none";
+		document.body.appendChild(iframe);
+	}
+
+	function _createFormNode() {
+		var frameName = _guid();
+		_createiFrameNode(frameName);
+		oForm = document.createElement('form');
+		oForm.method = "post";
+		oForm.action = _submitAddr;
+		oForm.name = _guid();
+		oForm.target = frameName;
+		tableInput = document.createElement('input');
+		tableInput.setAttribute("name", "_vipLogTable");
+		tableInput.setAttribute("type", "hidden");
+		oForm.appendChild(tableInput);
+		dataInput = document.createElement('input');
+		dataInput.setAttribute("name", "_vipLogData");
+		dataInput.setAttribute("type", "hidden");
+		oForm.appendChild(dataInput);
+		siteDomainInput= document.createElement('input');
+		siteDomainInput.setAttribute("name", "_siteDomain");
+		siteDomainInput.setAttribute("type", "hidden");
+		oForm.appendChild(siteDomainInput);
+		document.body.appendChild(oForm);
+	}
+
+	function _addClientInfo(json, cookieName) {
+		json.user_browser = navigator.userAgent;
+		json.refer_url = document.referrer;
+		//json.page_url = document.location.pathname;
+		if(typeof json.page_url == "undefined" || !json.page_url)
+		{
+			//use system define location pathname. 
+   			json.page_url = document.location.pathname;
+  		}
+
+		//json.page_path_url= document.location.href;
+		//json.page_path_url=document.location.protocol+"//"+document.location.host+document.location.pathname;
+		if(typeof json.page_path_url == "undefined" || !json.page_path_url)
+		{
+			// use system define location helf. 
+   			json.page_path_url=document.location.protocol+"//"+document.location.host+document.location.pathname;
+  		}
+		//json.page_params = !document.location.search ? null: document.location.search;
+		//json.user_session_id = null;
+		// delete null key
+		for ( var key in json) {
+			if (json[key]===null || json[key]==="")
+				delete json[key];
+		}
+		if (cookieName) {
+			// judge behaviorName exists or not
+			var behaviorValue = _cookie(behaviorName);
+			if (behaviorValue) {
+				// delete
+				//_cookie(cookieName, null);
+				return;
+			}
+			var value = _cookie(cookieName);
+			if (value) {
+				// add
+				_cookie(behaviorName, value, {
+					path : "/",
+					domain : "cqvip.com",
+					expires : 20 * 365
+				});
+				// delete
+				//_cookie(cookieName, null);
+			}
+		}
+	}
+	/**
+	 * submit data
+	 */
+	function _vipLog(tableName, json, cookieName) {
+		if (tableName && json) {
+			if (!oForm)
+				_createFormNode();
+			_addClientInfo(json, cookieName);
+			tableInput.value = tableName;
+			dataInput.value = JSON.stringify(json);
+			siteDomainInput.value=document.location.host;
+			oForm.submit();
+		}
+	}
+
+	for ( var i = 0; i < _scriptCollections.length; i++) {
+		_loadScript(_remoteAddr + _scriptCollections[i]);
+	}
+
+	window.vipLog = _vipLog;
+
+})(window);
