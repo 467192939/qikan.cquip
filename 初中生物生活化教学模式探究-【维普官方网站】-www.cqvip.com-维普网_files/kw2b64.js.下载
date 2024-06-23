@@ -1,0 +1,39 @@
+﻿window.k2b64 = (function (Base64) {
+    return function (input) {
+        return  encodeURIComponent('B64,' +Base64.encode(input))
+    }
+})(Base64);
+window.k2b64Uncode = (function (Base64) {
+    return function (input) {
+        return 'B64,' + Base64.encode(input)
+    }
+})(Base64);
+(function ($, document) {
+    $(document)
+        .on('submit', 'form[action="/main/search.aspx"]', function (e) {
+            console.log(e)
+            var kinput = $('[name="k"]', e.target).val()
+            if (kinput) {
+                kinput = k2b64Uncode(kinput)
+            }
+            $('[name="k"]', e.target).val(kinput);
+        })
+        .on('submit', 'form[action="/qikan/search.aspx"]', function (e) {
+            console.log(e)
+            var kinput = $('[name="k"]', e.target).val()
+            if (kinput) {
+                kinput = k2b64Uncode(kinput)
+            }
+            $('[name="k"]', e.target).val(kinput);
+        })
+        .on('form-submit-validate', 'form', function (e, data) {
+            for (var x in data) {
+            }
+            $.each(data, function (i, item) {
+
+                if (item.name == 'k') {
+                    item.value = k2b64Uncode(item.value)
+                }
+            })
+        });
+})(jQuery, document);

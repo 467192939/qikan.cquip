@@ -1,0 +1,356 @@
+!
+    function (n) {
+        var t = {};
+        function e(i) {
+            if (t[i]) return t[i].exports;
+            var o = t[i] = {
+                i: i,
+                l: !1,
+                exports: {}
+            };
+            return n[i].call(o.exports, o, o.exports, e),
+                o.l = !0,
+                o.exports
+        }
+        e.m = n,
+            e.c = t,
+            e.d = function (n, t, i) {
+                e.o(n, t) || Object.defineProperty(n, t, {
+                    enumerable: !0,
+                    get: i
+                })
+            },
+            e.r = function (n) {
+                "undefined" != typeof Symbol && Symbol.toStringTag && Object.defineProperty(n, Symbol.toStringTag, {
+                    value: "Module"
+                }),
+                    Object.defineProperty(n, "__esModule", {
+                        value: !0
+                    })
+            },
+            e.t = function (n, t) {
+                if (1 & t && (n = e(n)), 8 & t) return n;
+                if (4 & t && "object" == typeof n && n && n.__esModule) return n;
+                var i = Object.create(null);
+                if (e.r(i), Object.defineProperty(i, "default", {
+                    enumerable: !0,
+                    value: n
+                }), 2 & t && "string" != typeof n) for (var o in n) e.d(i, o,
+                    function (t) {
+                        return n[t]
+                    }.bind(null, o));
+                return i
+            },
+            e.n = function (n) {
+                var t = n && n.__esModule ?
+                    function () {
+                        return n.
+                            default
+                    } :
+                    function () {
+                        return n
+                    };
+                return e.d(t, "a", t),
+                    t
+            },
+            e.o = function (n, t) {
+                return Object.prototype.hasOwnProperty.call(n, t)
+            },
+            e.p = "",
+            e(e.s = 0)
+    }([function (n, t, e) {
+        "use strict";
+        var i = function () {
+            function n(n, t) {
+                for (var e = 0; e < t.length; e++) {
+                    var i = t[e];
+                    i.enumerable = i.enumerable || !1,
+                        i.configurable = !0,
+                        "value" in i && (i.writable = !0),
+                        Object.defineProperty(n, i.key, i)
+                }
+            }
+            return function (t, e, i) {
+                return e && n(t.prototype, e),
+                    i && n(t, i),
+                    t
+            }
+        }();
+        function o(n, t) {
+            if (!(n instanceof t)) throw new TypeError("Cannot call a class as a function")
+        }
+        e(1),
+            Array.prototype.forEach || (Array.prototype.forEach = function (n, t) {
+                var e, i;
+                if (null == this) throw new TypeError("this is null or not defined");
+                var o = Object(this),
+                    s = o.length >>> 0;
+                if ("function" != typeof n) throw new TypeError(n + " is not a function");
+                for (arguments.length > 1 && (e = t), i = 0; i < s;) {
+                    var l;
+                    i in o && (l = o[i], n.call(e, l, i, o)),
+                        i++
+                }
+            });
+        var s = function () {
+            function n(t, e) {
+                o(this, n);
+                var i = this;
+                this._input = document.getElementById(t),
+                    this._tips = document.getElementById(e),
+                    this._input.addEventListener("input", (function () {
+                        i.value() && i.reset()
+                    }))
+            }
+            return i(n, [{
+                key: "error",
+                value: function (n) {
+                    this._tips.innerHTML = n,
+                        this._input.classList.add("has-error")
+                }
+            },
+            {
+                key: "reset",
+                value: function () {
+                    this._tips.innerHTML = "",
+                        this._input.classList.remove("has-error")
+                }
+            },
+            {
+                key: "value",
+                value: function () {
+                    return this._input.value
+                }
+            }]),
+                n
+        }(),
+            l = function () {
+                function n(t) {
+                    o(this, n),
+                        this.tabs = [],
+                        this.contents = [],
+                        this._events = {}
+                }
+                return i(n, [{
+                    key: "on",
+                    value: function (n, t) {
+                        this._events[n] = t
+                    }
+                },
+                {
+                    key: "clear",
+                    value: function () {
+                        this.tabs.forEach((function (n) {
+                            n.classList.remove("active")
+                        })),
+                            this.contents.forEach((function (n) {
+                                n.classList.remove("active")
+                            }))
+                    }
+                },
+                {
+                    key: "init",
+                    value: function () {
+                        for (var n = this,
+                            t = document.querySelectorAll("#login-dialog a.login-tab-item"), e = 0; e < t.length; e++) {
+                            var i = t[e];
+                            n.tabs.push(i);
+                            var o = i.getAttribute("href");
+                            n.contents.push(document.querySelector(o))
+                        }
+                        return $("#login-dialog a.login-tab-item"),
+                            n.tabs.forEach((function (t) {
+                                t.addEventListener("click", (function (e) {
+                                    e.preventDefault();
+                                    var i = e.target.getAttribute("href");
+                                    return n.clear(),
+                                        t.classList.add("active"),
+                                        document.querySelector(i).classList.add("active"),
+                                        "function" == typeof n._events.change && n._events.change.call(),
+                                        !1
+                                }))
+                            })),
+                            n
+                    }
+                }]),
+                    n
+            }(),
+            r = function () {
+                function converteRsa(pwd) {
+                    var encrypt = new JSEncrypt();
+                    var pubkey = 'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC3GoGoyEPiiiidpI045bi5gs6gcEFM0li7CfUvop8dqbIuNbLQnoCr56olcjCl509PgGnO/0gzb7r1R/Z8mBPISplqAGFxfc4q7PgGdowdZYiwRBKZ2RMpexuvXd2Z54GUC0emhtvratckiZQFGDyb+TWc+xSK9MV4Z2tdWJnGUQIDAQAB'
+                    encrypt.setPublicKey(pubkey);
+                    var encrypted = encrypt.encrypt(pwd);
+                    //encrypted = encodeURIComponent(encrypted)
+                    return encrypted
+                }
+                function n() {
+                    o(this, n),
+                        this._user = new s("login-user-input", "login-form-tips"),
+                        this._pwd = new s("login-pwd-input", "login-form-tips"),
+                        this._tips = document.getElementById("login-form-tips"),
+                        this._ok = document.getElementById("login-ok-btn"),
+                        this._ip = document.getElementById("login-ok-ip"),
+                        this._ipLabel = document.getElementById("login-ok-ip-label"),
+                        this.busying = !1
+                }
+                return i(n, [{
+                    key: "tips",
+                    value: function (n) {
+                        this._tips.innerHTML = n
+                    }
+                },
+                {
+                    key: "loading",
+                    value: function () {
+                        this.busying = !0,
+                            this._ok.innerText = "请稍后...",
+                            this._ipLabel.innerText = "请稍后...",
+                            this._ok.classList.add("busying"),
+                            this._ip.classList.add("busying")
+                    }
+                },
+                {
+                    key: "reset",
+                    value: function () {
+                        this.busying = !1,
+                            this._ok.innerText = "登录",
+                            this._ipLabel.innerText = "点击图标登录",
+                            this._ok.classList.remove("busying"),
+                            this._ip.classList.remove("busying")
+                    }
+                },
+                {
+                    key: "_validate",
+                    value: function () {
+                        var n = this._pwd.value(),
+                            t = this._user.value();
+                        return t ? n ? {
+                            user: t,
+                            pwd: n
+                        } : (this._pwd.error("请输入密码！"), !1) : (this._user.error("请输入手机号/邮箱"), !1)
+                    }
+                },
+                {
+                    key: "login",
+                    value: function (n, t) {
+                        debugger
+                        var e = this;
+                        if (!e.busying) {
+                            var i = {
+                                LogSource: "http://www.cqvip.com/",
+                                IsVip:1
+                            };
+                            if (!t) {
+                                var o = e._validate();
+                                if (!o) return !1;
+                                e.tips(""),
+                                    i.UserName = o.user,
+                                    i.UserPassword = converteRsa(o.pwd)
+                            }
+                            e.loading(),
+                                $.ajax({
+                                    url: "http://my.cqvip.com/Login/Login",
+                                    type: "post",
+                                    data: i,
+                                    xhrFields: {
+                                        withCredentials: !0
+                                    },
+                                    success: function (t) {
+                                        !t || 200 != t.Status && 201 != t.Status ? e.tips(t.Message) : (__userLoggedIn__ = 1, "function" == typeof autologinevent && autologinevent(), "function" == typeof n && n(t)),
+                                        e.reset()
+                                    },
+                                    error: function (n) {
+                                        e.tips("系统繁忙，请稍后再试！"),
+                                            e.reset()
+                                    }
+                                })
+                        }
+                    }
+                }]),
+                    n
+            }(),
+            a = function () {
+                function n() {
+                    o(this, n);
+                    var t = this;
+                    t._mask = document.getElementById("login-mask"),
+                        t._dialog = document.getElementById("login-dialog"),
+                        t._close = document.getElementById("login-close"),
+                        t._ok = document.getElementById("login-ok-btn"),
+                        t._ip = document.getElementById("login-ok-ip"),
+                        t._login = new r,
+                        t.onloginok = function (n) {
+                            t.close()
+                        }
+                }
+                return i(n, [{
+                    key: "init",
+                    value: function () {
+                        var n = this;
+                        return n._close.addEventListener("click", (function (t) {
+                            n.close(),
+                                t.preventDefault()
+                        })),
+                            n._mask.addEventListener("click", (function (t) {
+                                n.close(),
+                                    t.preventDefault()
+                            })),
+                            n._ok.addEventListener("click", (function () {
+                                n._login.login(n.onloginok, !1)
+                            })),
+                            n._ip.addEventListener("click", (function () {
+                                n._login.login(n.onloginok, !0)
+                            })),
+                            (new l).init().on("change", (function () {
+                                n._login.tips("")
+                            })),
+                            n
+                    }
+                },
+                {
+                    key: "show",
+                    value: function (n) {
+                        var t = this;
+                        t._mask.style.display = "block",
+                            t._dialog.style.display = "block",
+                            setTimeout((function () {
+                                t._mask.classList.add("show")
+                            }), 5),
+                            "function" == typeof n && (t.onloginok = function (e) {
+                                0 != n.call(t, e) && t.close()
+                            })
+                    }
+                },
+                {
+                    key: "close",
+                    value: function () {
+                        this._dialog.style.display = "none",
+                            this._mask.style.display = "none",
+                            this._mask.classList.remove("show")
+                    }
+                }]),
+                    n
+            }(),
+            c = document.createElement("div");
+        c.innerHTML = '\n<div class="login-mask" id="login-mask" style="display: none;"></div>\n    <div class="login-panel" id="login-dialog">\n        <div class="login-header">\n            <a href="" class="login-panel-close" id="login-close"></a>\n\n        </div>\n        <div class="login-tab">\n            <a href="#ip-form" class="login-tab-item">\n                IP用户快速登录\n            </a>\n            <a href="#pwd-form" class="login-tab-item active">\n                账号登录\n            </a>\n        </div>\n        <div class="error-message" id="login-form-tips"></div>\n        <div class="login-content">\n            <div class="login-tab-content active" id="pwd-form">\n                <input id="login-user-input" type="text" class="login-input" placeholder="请输入手机号/邮箱">\n                <input id="login-pwd-input" type="password" class="login-input mt-3" placeholder="密码">\n                <button class="login-btn mt-3" id="login-ok-btn">登录</button>\n            </div>\n            <div class="login-tab-content" id="ip-form">\n                <div id="login-ok-ip-label" style="text-align:center;font-size: 12px;">点击图标登录</div>\n                <div id="login-ok-ip"><img src="http://cloud.cqvip.com/image/mycqvip/Content/img/login-logo.png?20190605" class="login-logo"></div>\n            </div>\n        </div>\n        <div class="login-floot">\n            <div style="flex: 1;"><a href="http://my.cqvip.com/User/Register" target="_blank">立即注册</a></div>\n            <a href="http://my.cqvip.com/User/ForGetEmailPass" target="_blank">忘记密码</a>\n        </div>\n    </div>\n',
+            document.body.appendChild(c);
+        var u = null;
+        window.getLoginDialog = function () {
+            return u || (u = (new a).init()),
+                u
+        },
+            $(document).on("click", "a[login-required]", (function (n) {
+                n.preventDefault();
+                var t = $(n.target).attr("login-required"),
+                    e = $(n.target).attr("target");
+                function i(n) {
+                    console.log(n),
+                        "_blank" == e ? window.open(n) : window.location.href = n
+                }
+                __userLoggedIn__ ? i(t) : getLoginDialog().show((function () {
+                    i(t)
+                }))
+            }))
+    },
+    function (n, t) { }]);

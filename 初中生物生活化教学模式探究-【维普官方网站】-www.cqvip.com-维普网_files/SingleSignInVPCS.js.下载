@@ -1,0 +1,17 @@
+﻿function goToVpcs() {
+    $.ajax({
+        url: '/Ajax/SingleSignInVPCS.aspx?action=check',
+        type: 'get',
+        cache: false,
+        datatype: 'json',
+        async: false,
+        success: function (data) {
+            var obj = $.parseJSON(data);
+            if (obj.Success) {
+                window.open(obj.Url, "_blank");
+            } else {
+               
+            }
+        }
+    });
+}

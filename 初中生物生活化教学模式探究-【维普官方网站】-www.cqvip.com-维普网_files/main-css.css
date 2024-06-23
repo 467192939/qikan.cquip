@@ -1,0 +1,218 @@
+    body {
+        background-color: #FFF;
+    }
+    
+    .login-panel {
+        width: 340px;
+        height: auto;
+        background: #fff;
+        border-radius: 4px;
+        overflow: hidden;
+        z-index: 1051;
+        position: fixed;
+        left: 50%;
+        top: 220px;
+        transform: translate(-50%, 0);
+        display: none;
+        font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    }
+    
+    .login-header {
+        position: relative;
+        padding-top: 40px;
+    }
+    
+    .login-content {
+        margin: 0 40px;
+    }
+    
+    .login-floot {
+        border-bottom: 1px solid #ccc;
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+        margin-top: 15px;
+        display: flex;
+        padding-bottom: 5px;
+        margin: 40px;
+    }
+    
+    .login-panel a {
+        color: #808080;
+        font-size: 14px;
+        text-decoration: none;
+    }
+    
+    .login-panel a:hover {
+        color: #FF5722;
+    }
+    
+    .login-tab {
+        display: flex;
+        margin: 0 40px;
+    }
+    
+    a.login-tab-item {
+        flex: 1;
+        cursor: pointer;
+        display: block;
+        border-bottom: 1px solid #ccc;
+        text-align: center;
+        line-height: 47px;
+        font-size: 18px;
+    }
+    
+    .login-tab-item.active {
+        border-bottom-color: #df2a22;
+    }
+    
+    .login-tab-content {
+        display: none;
+    }
+    
+    .login-tab-content.active {
+        display: block;
+    }
+    
+    .login-input {
+        width: 248px;
+        height: 38px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        background: #fff;
+        padding: 0 5px;
+        line-height: 38px;
+        outline: none;
+    }
+    
+    .login-btn {
+        height: 40px;
+        line-height: 40px;
+        background-color: #FF5722;
+        display: block;
+        width: 100%;
+        padding: 0 18px;
+        color: #fff;
+        white-space: nowrap;
+        text-align: center;
+        font-size: 14px;
+        border: none;
+        border-radius: 2px;
+        cursor: pointer;
+    }
+    
+    .login-btn:hover {
+        opacity: .8;
+        filter: alpha(opacity=80);
+        border: none;
+    }
+    
+    .login-btn:focus {
+        border: none;
+        outline: none
+    }
+    
+    .login-btn:active {
+        border: none;
+        outline: none
+    }
+    
+    .login-panel .mt-3 {
+        margin-top: 15px;
+    }
+    
+    .login-panel-close {
+        text-decoration: none;
+    }
+    
+    .login-panel-close::before {
+        content: "\2716";
+        color: #808080;
+        font-size: 14px;
+        position: absolute;
+        top: 5px;
+        right: 8px;
+    }
+    
+    .login-mask {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 1050;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        outline: 0;
+        opacity: 0;
+        background-color: #000000;
+    }
+    
+    .login-mask.show {
+        -webkit-transition: all .5s;
+        -moz-transition: all .5s;
+        -ms-transition: all .5s;
+        -o-transition: all .5s;
+        transition: all .5s;
+        opacity: .3;
+    }
+    
+    .has-error {
+        border-color: #df2a22;
+    }
+    
+    .error-message {
+        color: #df2a22;
+        font-size: 12px;
+        display: block;
+        line-height: 24px;
+        height: 24px;
+        margin: 0 40px;
+    }
+    
+    #login-ok-ip {
+        width: 210px;
+        cursor: pointer;
+        margin: 15px auto;
+        overflow: hidden;
+        border: solid 1px #FFFFFF;
+    }
+    
+    #login-ok-ip:hover {
+        border-color: #cccccc;
+        opacity: .8;
+    }
+    
+    #login-ok-ip img {
+        width: 100%;
+    }
+    /*     
+    @keyframes Twinkle {
+        0% {
+            opacity: 1;
+        }
+        50% {
+            opacity: .6;
+        }
+        100% {
+            opacity: 1;
+        }
+    } */
+    
+    @keyframes Twinkle {
+        0% {
+            opacity: 1;
+        }
+        50% {
+            opacity: .6;
+        }
+        100% {
+            opacity: 1;
+        }
+    }
+    
+    .busying {
+        animation: Twinkle 1.5s infinite;
+        -webkit-animation: Twinkle 1.5s infinite;
+    }
+    
+    #login-ok-ip.busying {
+        border-color: #cccccc;
+    }
